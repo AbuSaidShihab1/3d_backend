@@ -4,6 +4,8 @@ const order_model = require("../Models/Ordermodel");
 const basic_router=express();
 const { v4: uuidv4 } = require('uuid');
 const subscribe_model = require("../Models/Subscribemodel");
+const blog_model=require("../Models/Blogmodel");
+const offer_model = require("../Models/offermodel");
 basic_router.get("/all-products",async(req,res)=>{
         try {
             const all_products=await product_model.find();
@@ -57,5 +59,19 @@ basic_router.post("/subscribe",async(req,res)=>{
     } catch (error) {
         console.log(error)
     }
-})
+});
+
+basic_router.get("/all-blogs",async(req,res)=>{
+        try {
+            const blogs=await blog_model.find();
+            res.send({success:true,message:"ok",blogs:blogs})
+        } catch (error) {
+            console.log(error)
+        }
+});
+basic_router.get('/offer-data',async(req, res) => {
+      const offer=await offer_model.findOne({offer_name:"main"});
+      console.log(offer)
+      res.send({success:true,message:"ok",offer:offer})
+});
 module.exports=basic_router;

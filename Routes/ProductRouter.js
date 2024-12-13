@@ -8,6 +8,7 @@ const blog_model = require('../Models/Blogmodel');
 const reserve_model = require('../Models/Reservationmodel');
 const nodemailer = require("nodemailer");
 const subscribe_model = require('../Models/Subscribemodel');
+const offer_model = require('../Models/offermodel');
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -147,15 +148,16 @@ router.put("/update-order-status/:id",ensureAuthenticated,async(req,res)=>{
 });
 
 // ------------blog
-router.post("/add-blog",ensureAuthenticated,(req,res)=>{
+router.post("/add-blog",uploadimage.single("file"),ensureAuthenticated,(req,res)=>{
     try {
         const {title,description,category}=req.body;
           const add_blog=new blog_model({
+            image:req.file.filename,
             title,description,category
         });
         if(add_blog){
             add_blog.save();
-        res.send({success:true,message:"Blog has been added!"})
+             res.send({success:true,message:"Blog has been added!"})
         }
     } catch (error) {
         console.log(error)
@@ -167,7 +169,12 @@ router.delete("/delete-blog/:id",ensureAuthenticated,async(req,res)=>{
           if(!delete_blog){
              res.send({success:false,message:"Blog did not find!"})
           };
-          res.send({success:true,message:"Blog has been deleted!"})
+           if(delete_blog){
+                  fs.unlinkSync(`./public/images/${delete_blog.image}`)
+                   res.send({success:true,message:"Blog has been deleted!"})
+         }
+         
+ 
         }catch(err){
             console.log(err.message)
         }
@@ -266,5 +273,36 @@ router.delete("/delete-subscriber/:id",ensureAuthenticated,async(req,res)=>{
         }catch(err){
             console.log(err.message)
         }
+});
+router.post("/admin-offer",ensureAuthenticated,(req,res)=>{
+    try {
+         const {offer}=req.body;
+         if(!offer){
+              res.send({success:false,message:"Enter offer amount!"})
+         }
+         const create_offer=new offer_model({amount:offer});
+          if(create_offer){
+             create_offer.save();
+              res.send({success:true,message:"Offer created successfully!"})
+          }
+    } catch (error) {
+        console.log(error)
+    }
+});
+router.put("/admin-update-offer/:id",ensureAuthenticated,async(req,res)=>{
+    try {
+         const {offer}=req.body;
+         if(!offer){
+              res.send({success:false,message:"Enter offer amount!"})
+         }
+         const create_offer=await offer_model.findByIdAndUpdate({_id:req.params.id},{amount:offer});
+           res.send({success:true,message:"Offer has been updated!"})
+    } catch (error) {
+        console.log(error)
+    }
+})
+router.get('/admin-offer-data', ensureAuthenticated,async(req, res) => {
+      const offer=await offer_model.findOne({offer_name:"main"});
+      res.send({success:true,message:"ok",offer:offer})
 });
 module.exports = router;
